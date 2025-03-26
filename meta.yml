@@ -1,0 +1,113 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: transcriptclean
+## TODO nf-core: Add a description of the module and list keywords
+description: Nextflow module of TranscriptClean
+keywords:
+  - bioinformatics
+  - long-reads
+  - alignment
+  - correction
+  - mismatches
+  - indels
+  - splice-junctions
+tools:
+  - transcriptclean:
+      description: |
+        Correct mismatches, microindels, and noncanonical splice junctions 
+        in long reads that have been mapped to the genome
+      homepage: https://github.com/mortazavilab/TranscriptClean
+      documentation: https://github.com/mortazavilab/TranscriptClean/wiki
+      tool_dev_url: https://github.com/mortazavilab/TranscriptClean
+      doi: 10.1093/bioinformatics/bty483
+      licence: ["MIT"]
+      identifier: ""
+
+## TODO nf-core: Add a description of all of the variables used as input
+input:
+  # Only when we have meta
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+
+    ## TODO nf-core: Delete / customise this example input
+    - sam:
+        type: file
+        description: Sorted SAM file
+        pattern: "*.{sam}"
+        ontologies:
+          - edam: "http://edamontology.org/format_3462" # SAM
+    - fasta:
+        type: file
+        description: Genome FASTA file
+        pattern: "*.{fasta,fa}"
+        ontologies:
+          - edam: "http://edamontology.org/format_1929" # FASTA
+    - vcf:
+        type: file
+        description: (Optional) VCF file of variants for variant-aware correction.
+        pattern: "*.{vcf}"
+        ontologies:
+          - edam: "http://edamontology.org/format_3016" # VCF
+    - splice_junctions:
+        type: file
+        description: (Optional) Splice junction file for noncanonical splice junction correction.
+        pattern: "*.{tab,txt}"
+    - gtf:
+        type: file
+        description: (Optional) GTF file for generating splice junction file.
+        pattern: "*.{vcf}"
+    - transcriptclean_logs:
+        type: file
+        description: Output files from TranscriptClean for report
+        pattern: "*.{clean.TE.log, clean.log}"
+
+## TODO nf-core: Add a description of all of the variables used as output
+output:
+  - results:
+      - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      ## TODO nf-core: Delete / customise this example output
+      - transcriptclean_sam:
+          type: file
+          description: Corrected SAM file
+          pattern: "*.{sam}"
+          ontologies:
+            - edam: "http://edamontology.org/format_3462" # SAM
+      - splice_junctions_extracted:
+          type: file
+          description: Splice junctions extracted from GTF file
+          pattern: "*.{txt}"
+      - corrected_fasta:
+          type: file
+          description: corrected FASTA file of transcripts
+          pattern: "*.{fasta,fa}"
+          ontologies:
+            - edam: "http://edamontology.org/format_1929" # FASTA
+      - TE_error_log:
+          type: file
+          description: Transcript error log file
+          pattern: "*.{clean.TE.log}"
+      - TE_log:
+          type: file
+          description: Transcript log file
+          pattern: "*.{clean.log}"
+      - report:
+          type: file
+          description: PDF TranscriptClean Report from logs
+          pattern: "*.{_report.pdf}"
+  - versions:
+      - "versions.yml":
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
+
+authors:
+  - "@borgessbarbara"
+maintainers:
+  - "@borgessbarbara"
