@@ -4,10 +4,6 @@ process EXTRACT_SPLICE_JUNCTIONS {
     tag "Extract splice junctions from GTF file"
     label 'process_high'
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'biocontainers/transcriptclean:v2.0.2_cv1':
-        'biocontainers/transcriptclean:v2.0.2_cv1' }"
-
     input:
     tuple val(meta), path(gtf), path(fasta)
 
@@ -47,10 +43,6 @@ process EXTRACT_SPLICE_JUNCTIONS {
 process TRANSCRIPTCLEAN {
     tag "TranscriptClean"
     label 'process_high'
-
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'biocontainers/transcriptclean:v2.0.2_cv1':
-        'biocontainers/transcriptclean:v2.0.2_cv1' }"
 
     input:
     tuple val(meta), path(sam), path(fasta), path(vcf), path(splice_junctions)
@@ -102,10 +94,6 @@ process TRANSCRIPTCLEAN {
 process GENERATE_REPORT {
     tag "Generate TranscriptClean report"
     label 'process_high'
-
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'biocontainers/transcriptclean:v2.0.2_cv1':
-        'biocontainers/transcriptclean:v2.0.2_cv1' }"
 
     input:
     tuple val(meta), path(transcriptclean_logs)
