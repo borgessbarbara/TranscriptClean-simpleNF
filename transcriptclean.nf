@@ -146,7 +146,9 @@ workflow RUN_TRANSCRIPTCLEAN {
         Channel.fromPath(params.vcf).ifEmpty(null).set  { ch_vcf }
     }
 
-    if (params.extract_sjs && params.gtf && params.sj_correction){
+    if (ch_sam_fasta.ifEmpty(null) {
+        error("Required SAM and FASTA files not inputed.")
+    } else if (params.extract_sjs && params.gtf && params.sj_correction){
         EXTRACT_SPLICE_JUNCTIONS(ch_gtf.combine(ch_sam_fasta.map{it[1]})).set { ch_ex_sjs }
         TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_ex_sjs.out.map{it})).set { ch_transcriptclean_res }
         GENERATE_REPORT(ch_transcriptclean_res.collect()).set { ch_report }
