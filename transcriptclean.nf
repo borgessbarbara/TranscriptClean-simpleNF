@@ -88,53 +88,60 @@ process GENERATE_REPORT {
     """
 } 
 
-workflow RUN_TRANSCRIPTCLEAN {
+workflow {
     main:
-    ch_versions = Channel.empty()
-
+    // Validate mandatory inputs
     // Create input channels
-    ch_sam_fasta = Channel.fromFilePairs(params.sam, flat: true, checkIfExists: true)
-        .combine(Channel.fromPath(params.fasta, checkIfExists: true))
-        .map { meta, sam, fasta -> [meta, sam, fasta] }
 
-    if (params.gtf) {
-        ch_gtf = Channel.fromPath(params.gtf, checkIfExists: true)
+    if (!params.sam) {
+        error "Mandatory parameter --sam not specified" 
     } else {
-        ch_gtf = Channel.empty()
+        ch_sam = Channel.fromFilePath(params.sam, checkIfExists: true)
+    }
+    if (!params.fasta) {
+        error "Mandatory parameter --fasta not specified"
+    } else {
+        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
     }
     
-    if (params.splice_junctions) {
-        ch_sjs = Channel.fromPath(params.splice_junctions, checkIfExists: true)
-    } else {
-        ch_sjs = Channel.empty()
-    }
+    // Combine with metadata
+    ch_sam_fasta = ch_sam.combine(ch_fasta)
 
-    if (params.vcf) {
-        ch_vcf = Channel.fromPath(params.vcf, checkIfExists: true)
-    } else {
-        ch_vcf = Channel.empty()
-    }
+    // Handle optional inputs
+    ch_gtf = params.gtf ? Channel.fromPath(params.gtf, checkIfExists: true) : Channel.empty()
+    ch_sjs = params.splice_junctions ? Channel.fromPath(params.splice_junctions, checkIfExists: true) : Channel.empty()
+    ch_vcf = params.vcf ? Channel.fromPath(params.vcf, checkIfExists: true) : Channel.empty()
 
+    // Main processing with proper output handling
     if (params.extract_sjs && params.gtf && params.sj_correction) {
-        ch_ex_sjs = EXTRACT_SPLICE_JUNCTIONS(ch_gtf.combine(ch_sam_fasta.map{ [it[0], it[2]] }))
-        ch_transcriptclean_res = TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_vcf, ch_ex_sjs.out.txt))
+        EXTRACT_SPLICE_JUNCTIONS(ch_gtf.combine(ch_fasta))
+        TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_vcf, EXTRACT_SPLICE_JUNCTIONS.out.txt))
+        GENERATE_REPORT(TRANSCRIPTCLEAN.out.log.collect())
+        
+        // Define outputs only for this branch
+        ext_sjs_results = EXTRACT_SPLICE_JUNCTIONS.out.txt
+        transcriptclean_results = TRANSCRIPTCLEAN.out
+        report_output = GENERATE_REPORT.out
     } 
     else if (params.sj_correction && params.splice_junctions) {
-        ch_transcriptclean_res = TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_vcf, ch_sjs))
+        TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_vcf, ch_sjs))
+        GENERATE_REPORT(TRANSCRIPTCLEAN.out.log.collect())
+        
+        transcriptclean_results = TRANSCRIPTCLEAN.out
+        report_output = GENERATE_REPORT.out
     }
     else if (params.variant_aware && params.vcf) {
-        ch_transcriptclean_res = TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_vcf))
+        TRANSCRIPTCLEAN(ch_sam_fasta.combine(ch_vcf))
+        GENERATE_REPORT(TRANSCRIPTCLEAN.out.log.collect())
+        
+        transcriptclean_results = TRANSCRIPTCLEAN.out
+        report_output = GENERATE_REPORT.out
     }
     else {
-        ch_transcriptclean_res = TRANSCRIPTCLEAN(ch_sam_fasta)
+        TRANSCRIPTCLEAN(ch_sam_fasta)
+        GENERATE_REPORT(TRANSCRIPTCLEAN.out.log.collect())
+        
+        transcriptclean_results = TRANSCRIPTCLEAN.out
+        report_output = GENERATE_REPORT.out
     }
-
-    ch_report = GENERATE_REPORT(ch_transcriptclean_res.out.log.collect())
-    ch_versions = ch_report.out.versions.mix(ch_transcriptclean_res.out.versions)
-
-    emit:
-    extracted_sjs = ch_ex_sjs ? ch_ex_sjs.out.txt : Channel.empty()
-    transcriptclean_results = ch_transcriptclean_res.out
-    transcriptclean_report = ch_report.out
-    versions = ch_versions
 }
