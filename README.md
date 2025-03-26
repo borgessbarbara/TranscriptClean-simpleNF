@@ -19,3 +19,7 @@ nextflow run transcriptclean.nf \\
 - Tabular `.tab`  file with splice junctions outputed from STAR alignment for splice junction correction (set `--sj_correction true` and input with `--splice_junctions`)
 - GTF for splice junction extraction before splice junction correction (set `--sj_correction true` and input with `--gtf`)
 - VCF for variant-aware correction (set `--variant_aware true` and input with `--vcf`)
+
+## Test data
+
+Google Drive: https://drive.google.com/drive/folders/193kznkMpT54hbp7fdJnKQiIKnnvWRFKW?usp=sharing
