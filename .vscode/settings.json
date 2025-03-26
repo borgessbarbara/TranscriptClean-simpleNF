@@ -1,0 +1,4 @@
+{
+    "markdown.styles": ["public/vscode_markdown.css"],
+    "nextflow.formatting.harshilAlignment": true
+}
